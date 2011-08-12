@@ -1,0 +1,258 @@
+########################################################################
+### PENDING DEFAULT
+########################################################################
+
+########################################################################
+> p4n change -o|ostr
+
+code = stat
+Change = new
+Client = scobi_ws
+User = scobi
+Status = new
+Description = <enter description here>
+  [0]
+    Files = //depot/Jam/REL2.1/src/Build.com
+  [1]
+    Files = //depot/Jam/REL2.1/src/command.c
+  [2]
+    Files = //depot/Jam/REL2.1/src/command.h
+  [3]
+    Files = //depot/Jam/REL2.1/src/compile.c
+  [4]
+    Files = //depot/Jam/REL2.1/src/compile.h
+
+########################################################################
+> p4n fstat -Olhp -Rco -e default //scobi_ws/...|ostr
+
+code = stat
+depotFile = //depot/Jam/REL2.1/src/Build.com
+clientFile = //scobi_ws/Jam/REL2.1/src/Build.com
+path = C:\temp\p4sample\client\Jam\REL2.1\src\Build.com
+isMapped =
+headAction = branch
+headType = text
+headTime = 1106847349
+headRev = 1
+headChange = 749
+headModTime = 1106847322
+haveRev = 1
+action = edit
+change = default
+type = text
+actionOwner = scobi
+fileSize = 854
+digest = CAA2DC4BFC25A836C5D37E46FB92B016
+
+code = stat
+depotFile = //depot/Jam/REL2.1/src/command.c
+clientFile = //scobi_ws/Jam/REL2.1/src/command.c
+path = C:\temp\p4sample\client\Jam\REL2.1\src\command.c
+isMapped =
+headAction = branch
+headType = text
+headTime = 1106847349
+headRev = 1
+headChange = 749
+headModTime = 1106847324
+haveRev = 1
+action = edit
+change = default
+type = text
+actionOwner = scobi
+fileSize = 1695
+digest = A7FE8D246359604DE0BC8E70550DB895
+
+code = stat
+depotFile = //depot/Jam/REL2.1/src/command.h
+clientFile = //scobi_ws/Jam/REL2.1/src/command.h
+path = C:\temp\p4sample\client\Jam\REL2.1\src\command.h
+isMapped =
+headAction = branch
+headType = text
+headTime = 1106847349
+headRev = 1
+headChange = 749
+headModTime = 1106847315
+haveRev = 1
+action = edit
+change = default
+type = text
+actionOwner = scobi
+fileSize = 1055
+digest = 6A19DFF9C46FDEDDD1241FAC46D927C4
+
+code = stat
+depotFile = //depot/Jam/REL2.1/src/compile.c
+clientFile = //scobi_ws/Jam/REL2.1/src/compile.c
+path = C:\temp\p4sample\client\Jam\REL2.1\src\compile.c
+isMapped =
+headAction = branch
+headType = text
+headTime = 1106847349
+headRev = 1
+headChange = 749
+headModTime = 1106847324
+haveRev = 1
+action = edit
+change = default
+type = text
+actionOwner = scobi
+fileSize = 15844
+digest = B12A2217FD5BC7047E4F4F3B45E672DE
+
+code = stat
+depotFile = //depot/Jam/REL2.1/src/compile.h
+clientFile = //scobi_ws/Jam/REL2.1/src/compile.h
+path = C:\temp\p4sample\client\Jam\REL2.1\src\compile.h
+isMapped =
+headAction = branch
+headType = text
+headTime = 1106847349
+headRev = 1
+headChange = 749
+headModTime = 1106847314
+haveRev = 1
+action = edit
+change = default
+type = text
+actionOwner = scobi
+fileSize = 1509
+digest = 75408D0FF2B7C02BF033B5E73A382E54
+
+
+########################################################################
+### PENDING NON-DEFAULT (w/ shelved)
+########################################################################
+
+########################################################################
+> p4n change -o 813|ostr
+
+code = stat
+Change = 813
+Date = 2011/06/17 18:39:23
+Client = scobi_ws
+User = scobi
+Status = pending
+Description = test
+Type = public
+  [0]
+    Files = //depot/Jam/MAIN/src/command.c
+  [1]
+    Files = //depot/Jam/MAIN/src/expand.h
+
+########################################################################
+> p4n describe -s -S 813|ostr
+
+code = stat
+change = 813
+user = scobi
+client = scobi_ws
+time = 1308361163
+desc = test
+status = pending
+changeType = public
+shelved =
+  [0]
+    depotFile = //depot/Jam/REL2.1/src/command.h
+    action = edit
+    type = text
+    rev = 1
+    fileSize = 1068
+    digest = C3A48C84146457A26059769762EE7D4F
+    
+########################################################################
+> p4n fstat -Olhp -Rco -e 813 //scobi_ws/...|ostr
+
+code = stat
+depotFile = //depot/Jam/MAIN/src/command.c
+clientFile = //scobi_ws/Jam/MAIN/src/command.c
+path = C:\temp\p4sample\client\Jam\MAIN\src\command.c
+isMapped =
+headAction = edit
+headType = text
+headTime = 1106847338
+headRev = 8
+headChange = 548
+headModTime = 1106847338
+haveRev = 8
+action = edit
+change = 813
+type = text
+actionOwner = scobi
+fileSize = 1665
+digest = A43E605D75357C187D580713AC84434D
+
+code = stat
+depotFile = //depot/Jam/MAIN/src/expand.h
+clientFile = //scobi_ws/Jam/MAIN/src/expand.h
+path = C:\temp\p4sample\client\Jam\MAIN\src\expand.h
+isMapped =
+headAction = edit
+headType = text
+headTime = 1106847314
+headRev = 2
+headChange = 30
+headModTime = 1106847314
+haveRev = 2
+action = edit
+change = 813
+type = text
+actionOwner = scobi
+fileSize = 204
+digest = DBF54C4E523310CFE7E2C769E55980D0
+
+code = stat
+desc = test
+
+########################################################################
+### SUBMITTED
+########################################################################
+
+########################################################################
+> p4n describe -s 805 |ostr
+code = stat
+change = 805
+user = Aruna_Gupta
+client = ag_dev
+time = 1121360547
+desc = Refactored application to tidy up where the Estuff went
+status = submitted
+changeType = public
+path = //depot/Talkhouse/rel1.5/...
+  [0]
+    depotFile = //depot/Talkhouse/rel1.5/EBolt.java
+    action = delete
+    type = text
+    rev = 2
+  [1]
+    depotFile = //depot/Talkhouse/rel1.5/ENut.java
+    action = delete
+    type = text
+    rev = 4
+  [2]
+    depotFile = //depot/Talkhouse/rel1.5/estuff/EBolt.java
+    action = branch
+    type = text
+    rev = 1
+    fileSize = 690
+    digest = 8E114C72CF59DD4FC5A1A6F271CC016B
+  [3]
+    depotFile = //depot/Talkhouse/rel1.5/estuff/ENut.java
+    action = branch
+    type = text
+    rev = 1
+    fileSize = 727
+    digest = 793EE9517ABF02ECCEC47403CE53FC99
+  [4]
+    depotFile = //depot/Talkhouse/rel1.5/estuff/EWidget.java
+    action = branch
+    type = text
+    rev = 1
+    fileSize = 508
+    digest = 980315F628558F686666344843994E71
+  [5]
+    depotFile = //depot/Talkhouse/rel1.5/EWidget.java
+    action = delete
+    type = text
+    rev = 2
