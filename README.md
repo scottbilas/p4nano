@@ -49,8 +49,6 @@ _I'll add to this over time as I get questions._
 
 	3. Making p4.net friendly to PowerShell is a big job. Too much rework was required.
 
-	4. Startup time of p4.net can be significant. Fine if running a batch job but not so fine if running lots of little scripts in tight loops.
-
 ### Q: Why Ms-PL?
 
 **A: It's the best for me**
