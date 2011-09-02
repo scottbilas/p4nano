@@ -160,23 +160,3 @@ filter p4n-run {
 
 set-alias p4 p4-run
 set-alias p4n p4n-run
-
-<### Format helpers ###>
-
-function Output-String {
-    process { $_.tostring() }
-}
-
-set-alias ostr output-string
-
-function Output-FormString {
-    process { $_.toformstring() }
-}
-
-function ConvertDateTime-P4ToSystem($p4date) {
-    return [p4nano.utility]::p4tosystem($p4date)
-}
-
-function ConvertDateTime-SystemToP4($datetime) {
-    return [p4nano.utility]::systemtop4($datetime)
-}
