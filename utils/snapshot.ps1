@@ -37,9 +37,11 @@ function p4n-snapshot-list {
 	$info = p4n info
 
 	$prefix = $info.clientname + '_snapshot_'
-	p4n labels -e ($prefix + '*') | %{$_.label} | sort -prop @{ Expression = {
-		[int]::parse([regex]::match($_, '(\d+)$').groups[1])
-	}}
+	p4n labels -e ($prefix + '*') | sort -prop @{ Expression = {
+		[int]::parse([regex]::match($_.label, '(\d+)$').groups[1])
+	}} | %{
+		"$($_.label) - $($_.description.trim())"
+	}
 }
 
 filter p4n-snapshot-delete(
