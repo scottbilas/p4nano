@@ -56,7 +56,7 @@ filter p4n-snapshot-delete(
 }
 
 filter p4n-snapshot-delete-old([int]$KeepCount = 5) {
-	$snapshots = p4n-snapshot-list | %{[int]::parse([regex]::match($_, '(\d+)$').groups[1])}
+	$snapshots = p4n-snapshot-list | %{[int]::parse([regex]::match($_, '(\d+)\s').groups[1])}
 	for ($i = 0; $i -lt $snapshots.count - $keepcount; ++$i) {
 		p4n-snapshot-delete $snapshots[$i]
 	}
