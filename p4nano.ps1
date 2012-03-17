@@ -112,8 +112,8 @@ filter p4-run {
             'ignore' { }
             'throw' { throw $message.trim() + " [from p4.exe $oldargs]" }
             default {
-                if ($iserror) { write-error $message }
-                else { write-warning $message }
+                if ($iserror) { write-error $message; write-error "with p4.exe $oldargs" }
+                else { write-warning $message; write-warning "with p4.exe $oldargs" }
             }
         }
     }
