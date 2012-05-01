@@ -47,10 +47,15 @@ function p4n-cdiff([int]$changenum) {
 	        }
 	    }
 
-	    (p4n describe -s $changenum).items | %{
+		(p4n describe -s $changenum).items | sort `
+			{!$_.depotfile.tolower().endswith('.sln')},				# sln first
+			{!$_.depotfile.tolower().endswith('.csproj')},			# then csproj
+			{[io.path]::getextension($_.depotfile).tolower()},		# then group by extension
+			{$_.depotfile.tolower()} | %{							# finally sorted by filename
 
 	        $olddepot = "$($_.depotfile)#$($_.rev-1)"
 	        $newdepot = "$($_.depotfile)#$($_.rev)"
+			$doit = $true
 
             if ($_.action -eq 'add') {
                 $olddepot = $null
@@ -59,9 +64,11 @@ function p4n-cdiff([int]$changenum) {
                 $newdepot = $null
             }
             elseif ($_.action -ne 'edit') {
-                write-error "action type $($_.action) currently unsupported (for $($_.depotfile))"
-                continue
+                write-warning "action type $($_.action) currently unsupported (for $($_.depotfile))"
+                $doit = $false
             }
+
+			if ($doit) {
 
 	        if ($p4diff) {
 
@@ -111,6 +118,7 @@ function p4n-cdiff([int]$changenum) {
 	            # fall back to meh behavior
 	            p4 diff2 $olddepot $newdepot
 	        }
+			}
 	    }
 	}
 }
