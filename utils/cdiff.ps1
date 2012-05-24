@@ -64,6 +64,15 @@ function p4n-cdiff {
 	}
 	elseif ($status -eq 'submitted') {
 
+		$basepath = ?? $OutputPath ([io.path]::gettemppath() + 'p4n\')
+
+		if (!$WhatIfPreference) {
+			if (!(test-path $basepath)) { mkdir $basepath >$null }
+
+			# write out changelist description in case it's needed
+			p4 describe -s $ChangeNum > (join-path $basepath "$ChangeNum.txt")
+		}
+
 		# detect beyond compare
 		$p4diff = (p4n set p4diff).items[0].value
 	    $isbc = $p4diff -and (split-path -leaf $p4diff) -eq 'bcomp.exe'
@@ -101,8 +110,6 @@ function p4n-cdiff {
 	            write-output "-$($_.depotfile) - skipped"
 				$doit = $false
 			}
-
-			$basepath = ?? $OutputPath ([io.path]::gettemppath() + 'p4n\')
 
 			if ($doit) {
 		        if ($p4diff) {
