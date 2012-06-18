@@ -66,12 +66,31 @@ function p4n-cdiff {
 
 		$basepath = ?? $OutputPath ([io.path]::gettemppath() + 'p4n\')
 
+		$changeinfo = p4n describe -s $ChangeNum
+		$changepath = "{0}_{1}_({2})" -f $ChangeNum, $changeinfo.user, $changeinfo.items.count
+
 		if (!$WhatIfPreference) {
 			if (!(test-path $basepath)) { mkdir $basepath >$null }
 
+			$describepath = $basepath
+
+			if ($SplitFolders) {
+				$describepath = join-path (join-path $basepath 'set0') $changepath
+				if (!(test-path $describepath)) {
+					mkdir $describepath > $null
+				}
+			}
+
+			$shortdesc = $changeinfo.desc -replace "[\n*?:\\/\[\]]", '_'
+			if ($shortdesc.length -ge 60) {
+				$shortdesc = $shortdesc.substring(0, 60)
+			}
+
 			# write out changelist description in case it's needed
-			p4 describe -s $ChangeNum > (join-path $basepath "$ChangeNum.txt")
+			p4 describe -s $ChangeNum > "$describepath\$changenum - $shortdesc.txt"
 		}
+
+		$basepath = resolve-path $basepath
 
 		# detect beyond compare
 		$p4diff = (p4n set p4diff).items[0].value
@@ -80,6 +99,8 @@ function p4n-cdiff {
 			# switch to bcompare.exe to cut down on processes - we aren't waiting for bcomp.exe to quit
 			$p4diff = (split-path $p4diff) + '\bcompare.exe'
 	    }
+
+		$ChangeNum
 
 		(p4n describe -s $ChangeNum).items | sort `
 			{!$_.depotfile.tolower().endswith('.sln')},				# sln first
@@ -112,79 +133,75 @@ function p4n-cdiff {
 			}
 
 			if ($doit) {
-		        if ($p4diff) {
 
-					$relativepath = $_.depotfile.substring(2).replace('/', '\')
-					if ($SplitFolders) {
-			            $oldtempname = join-path $basepath (join-path "$ChangeNum.a" $relativepath)
-			            $newtempname = join-path $basepath (join-path "$ChangeNum.b" $relativepath)
+				$relativepath = $_.depotfile.substring(2).replace('/', '\')
+				if ($SplitFolders) {
+			        $oldtempname = join-path $basepath (join-path "set0\$changepath" $relativepath)
+			        $newtempname = join-path $basepath (join-path "set1\$changepath" $relativepath)
 
-						$oldfile = $oldtempname
-						$newfile = $newtempname
+					$oldfile = $oldtempname
+					$newfile = $newtempname
+				}
+				else {
+			        $ext = [io.path]::getextension($_.depotfile)
+			        $nameonly = [io.path]::getfilenamewithoutextension($_.depotfile)
+
+			        $oldtempname = $newtempname = join-path $basepath $relativepath
+
+			        $oldpath = split-path $oldtempname
+			        $oldfile = "$oldpath\$nameonly#$($_.rev-1)$ext"
+			        $newpath = split-path $newtempname
+			        $newfile = "$newpath\$nameonly#$($_.rev)$ext"
+				}
+
+		        $oldfilename = split-path -leaf $oldtempname
+		        $newfilename = split-path -leaf $newtempname
+
+	            if ($olddepot) {
+	    	        $oldtitle = "$oldfilename - $olddepot"
+					if (!$WhatIfPreference) {
+	                    p4 print -q -o $oldfile $olddepot
 					}
-					else {
-			            $ext = [io.path]::getextension($_.depotfile)
-			            $nameonly = [io.path]::getfilenamewithoutextension($_.depotfile)
+	            }
+	            else {
+	    	        $oldtitle = "$oldfilename - (new file)"
+	                if (test-path $oldfile) { del -force $oldfile }
+	            }
 
-			            $oldtempname = $newtempname = join-path $basepath $relativepath
-
-			            $oldpath = split-path $oldtempname
-			            $oldfile = "$oldpath\$nameonly#$($_.rev-1)$ext"
-			            $newpath = split-path $newtempname
-			            $newfile = "$newpath\$nameonly#$($_.rev)$ext"
+	            if ($newdepot) {
+	    	        $newtitle = "$newfilename - $newdepot"
+					if (!$WhatIfPreference) {
+			            p4 print -q -o $newfile $newdepot
 					}
+	            }
+	            else {
+	                $newtitle = "$newfilename - (deleted file)"
+	                if (test-path $newfile) { del -force $newfile }
+	            }
 
-		            $oldfilename = split-path -leaf $oldtempname
-		            $newfilename = split-path -leaf $newtempname
-
-	                if ($olddepot) {
-	    	            $oldtitle = "$oldfilename - $olddepot"
-						if (!$WhatIfPreference) {
-	                    	p4 print -q -o $oldfile $olddepot
-						}
-	                }
-	                else {
-	    	            $oldtitle = "$oldfilename - (new file)"
-	                    if (test-path $oldfile) { del -force $oldfile }
-	                }
-
-	                if ($newdepot) {
-	    	            $newtitle = "$newfilename - $newdepot"
-						if (!$WhatIfPreference) {
-			                p4 print -q -o $newfile $newdepot
-						}
-	                }
-	                else {
-	                    $newtitle = "$newfilename - (deleted file)"
-	                    if (test-path $newfile) { del -force $newfile }
-	                }
-
-		            # special support for bc
-	                $diffargs = @()
-		            if ($isbc) {
-	                    $diffargs += '/ro', "/title1=$oldtitle", "/title2=$newtitle"
-		            }
-	                $diffargs += $oldfile
-	                if ($newdepot) {
-	                    $diffargs += $newfile
-	                }
-
-					if (!$WhatIfPreference -and !$NoDiff) {
-	                	&$p4diff $diffargs
-			            sleep .1 # sleep a bit to let bcomp keep up, so the files stay in the order we want
-					}
-
-					$newdepot
+		        # special support for bc
+	            $diffargs = @()
+		        if ($isbc) {
+	                $diffargs += '/ro', "/title1=$oldtitle", "/title2=$newtitle"
 		        }
-		        else {
+	            $diffargs += $oldfile
+	            if ($newdepot) {
+	                $diffargs += $newfile
+	            }
 
-		            # fall back to meh behavior
-					if (!$WhatIfPreference -and !$NoDiff) {
-			            p4 diff2 $olddepot $newdepot
+				if (!$WhatIfPreference -and !$NoDiff) {
+
+			        if ($p4diff) {
+		                &$p4diff $diffargs
+				        sleep .1 # sleep a bit to let bcomp keep up, so the files stay in the order we want
 					}
+			        else {
+			            # fall back to meh behavior
+				        p4 diff2 $olddepot $newdepot
+			        }
+				}
 
-					$newdepot
-		        }
+				$newdepot
 			}
 	    }
 	}
