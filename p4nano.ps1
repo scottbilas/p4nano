@@ -3,6 +3,7 @@
 
 # enable this when working on p4nano.cs
 #$p4nanodebug = $true
+$p4nanodebug = $false
 
 <### Compile p4nano.cs ###>
 
