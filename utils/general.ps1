@@ -25,3 +25,33 @@ function p4n-delete-emptychangelists {
 		?{ !$_.shelved -and !$_.arrayfields['depotfile'].count } |
 		%{ p4n change -d $_.change }
 }
+
+function p4n-unshelve {
+
+    [CmdletBinding(DefaultParameterSetName='BugID', SupportsShouldProcess=$true)]
+    param(
+        [int]$ChangeList,
+        [switch]$NoCheckout,
+        [switch]$IncludeUnmapped
+        #$AltRoot
+    )
+
+    if (!$NoCheckout) {
+        throw 'NoCheckout is the only mode supported currently'
+    }
+
+    foreach ($file in (p4n describe -s -S $ChangeList|% items|%{ p4n where $_.depotfile })) {
+
+        if (!$IncludeUnmapped -and $file.unmap) { continue }
+
+        if ((test-path $file.path) -and !$PSCmdlet.ShouldContinue("Overwrite $($file.path)?", 'Confirm Overwrite')) {
+            continue
+        }
+
+        Write-Host ('{0} to {1}' -f (?: $NoCheckout 'Copying' 'Unshelving'), $file.path)
+
+        if (!$WhatIfPreference) {
+            p4 print -q -o $file.path "$($file.depotfile)@=$ChangeList"
+        }
+    }
+}

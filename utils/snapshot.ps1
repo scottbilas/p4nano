@@ -1,6 +1,9 @@
 function p4n-snapshot-create {
 	$info = p4n info
 
+	# should not have to do this! but for some reason, p4n returns a username of '*unknown*' whereas p4 info returns the user just fine..
+	$username = ((p4 info) -match 'user name:' -split ': ')[-1]
+
 	$latest = 0
 	$prefix = $info.clientname + '_snapshot_'
 
@@ -17,9 +20,9 @@ function p4n-snapshot-create {
 
 	$l = new-object p4nano.record
 	$l.Label = $prefix + $latest
-	$l.Description = "Snapshot label created for $($info.username) on $(get-date)"
+	$l.Description = "Snapshot label created for $username on $(get-date)"
 	$l.Options = 'unlocked'
-	$l.Owner = $info.username
+	$l.Owner = $username
 	$l.arrayfields.set('View', '//depot/...')
 
 	"Created label $($l.label)"

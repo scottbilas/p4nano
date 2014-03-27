@@ -9,7 +9,7 @@ function p4n-cdiff {
     # TODO future: accept path args to filter the changelist
 
 	if (!$NoReviewFilter) {
-		$reviews = (p4n user -o).arrayfields['reviews'] | %{
+		$reviews = (p4n -ea=throw user -o).arrayfields['reviews'] | %{
 		    if ($_[0] -eq '-') {
 		        $_ = $_.substring(1)
 		        $inclusive = $false
@@ -36,22 +36,47 @@ function p4n-cdiff {
 	}
 
 	$status = 'pending'
-	if ($ChangeNum) { $status = (p4n change -o $ChangeNum).status }
+	if ($ChangeNum) { $status = (p4n -ea=throw change -o $ChangeNum).status }
 
 	if ($status -eq 'pending') {
 
 	    $shelved = $false
 
+<#
+WIP TESTING
+
+$change = 557035 # remote
+$change = 557037 # local
+
+$files = @()
+
+$pending = p4n -wa=ignore fstat -Ro -e $change //...
+if ($pending[0].code -eq 'stat') {
+    $files += $pending
+}
+
+$shelved = p4n -wa=ignore fstat -Rs -e $change //...
+if ($shelved[0].code -eq 'stat') {
+    $files += $shelved
+}
+
+$files | ?{ $_.depotfile } | %{ '{0}: ({1}) - {2}' -f $_.depotfile, (?: $_.shelved 'shelved' 'pending'), $_.code }
+
+''
+
+(p4n change -o $change).arrayfields
+#>
+
 	    if ($ChangeNum) {
-	        $files = p4n -nowarn fstat -Ro -e $ChangeNum //...
+	        $files = p4n -wa=ignore fstat -Ro -e $ChangeNum //...
 	        # try shelved
 	        if ($files.iserror) {
-	            $files = p4n fstat -Rs -e $ChangeNum //...
+	            $files = p4n -ea=throw fstat -Rs -e $ChangeNum //...
 	            $shelved = $true
 	        }
 	    }
 	    else {
-	        $files = p4n fstat -Ro //...
+	        $files = p4n -ea=throw fstat -Ro //...
 	    }
 
 		#####WIP...
@@ -66,8 +91,12 @@ function p4n-cdiff {
 
 		$basepath = ?? $OutputPath ([io.path]::gettemppath() + 'p4n\')
 
-		$changeinfo = p4n describe -s $ChangeNum
+		$changeinfo = p4n -ea=throw describe -s $ChangeNum
 		$changepath = "{0}_{1}_({2})" -f $ChangeNum, $changeinfo.user, $changeinfo.items.count
+
+        if ($changeinfo.path -match '//depot/([^/]+)/') {
+            $changepath += '-' + $matches[1]
+        }
 
 		if (!$WhatIfPreference) {
 			if (!(test-path $basepath)) { mkdir $basepath >$null }
@@ -81,7 +110,7 @@ function p4n-cdiff {
 				}
 			}
 
-			$shortdesc = $changeinfo.desc -replace "[\n*?:\\/\[\]]", '_'
+			$shortdesc = $changeinfo.desc -replace "[\n*?:\\/\[\]`"><]", '_'
 			if ($shortdesc.length -ge 60) {
 				$shortdesc = $shortdesc.substring(0, 60)
 			}
@@ -102,24 +131,45 @@ function p4n-cdiff {
 
 		$ChangeNum
 
-		(p4n describe -s $ChangeNum).items | sort `
-			{!$_.depotfile.tolower().endswith('.sln')},				# sln first
-			{!$_.depotfile.tolower().endswith('.csproj')},			# then csproj
-			{[io.path]::getextension($_.depotfile).tolower()},		# then group by extension
-			{$_.depotfile.tolower()} | %{							# finally sorted by filename
+        $files = (p4n -ea=throw describe -s $ChangeNum).items | sort `
+			{!$_.depotfile.tolower().endswith('.sln')},			# sln first
+			{!$_.depotfile.tolower().endswith('.csproj')},		# then csproj
+			{[io.path]::getextension($_.depotfile).tolower()},	# then group by extension
+			{$_.depotfile.tolower()}							# finally sorted by filename
+
+        $commonprefix = $null
+        $files | %{
+            $parts = $_.depotfile -split '/' | ?{ $_ }
+
+            if ($commonprefix) {
+                for ($i = 0; $i -lt $commonprefix.length; ++$i) {
+                    if ($parts[$i] -ne $commonprefix[$i]) {
+                        $commonprefix = $commonprefix[0..$i]
+                    }
+                }
+            }
+            else {
+                $commonprefix = $parts[0..($parts.length-2)]
+            }
+        }
+
+        $commonprefix = $commonprefix -join '/'
+        if ($commonprefix) { $commonprefix += '/' }
+
+        foreach ($_ in $files) {
 
 	        $olddepot = "$($_.depotfile)#$($_.rev-1)"
 	        $newdepot = "$($_.depotfile)#$($_.rev)"
 			$doit = $true
 
 			if (ShouldDiff $_.depotfile) {
-	            if ($_.action -eq 'add') {
+	            if ($_.action -match '^(add|branch)$') {
 	                $olddepot = $null
 	            }
 	            elseif ($_.action -eq 'delete') {
 	                $newdepot = $null
 	            }
-	            elseif ($_.action -ne 'edit') {
+	            elseif ($_.action -notmatch '^(edit|integrate|branch)$') {
 
 					# $$$ implement integ and move support. it's not so simple because we still want the folder diff to work even though the names/locations may have changed.
 
@@ -134,7 +184,8 @@ function p4n-cdiff {
 
 			if ($doit) {
 
-				$relativepath = $_.depotfile.substring(2).replace('/', '\')
+				$relativepath = $_.depotfile.substring(2 + $commonprefix.length).replace('/', '\')
+
 				if ($SplitFolders) {
 			        $oldtempname = join-path $basepath (join-path "set0\$changepath" $relativepath)
 			        $newtempname = join-path $basepath (join-path "set1\$changepath" $relativepath)
