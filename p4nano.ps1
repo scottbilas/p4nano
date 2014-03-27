@@ -1,5 +1,9 @@
 ##### REMOVE ?? and ?: USAGE
 
+# TODO:
+# 
+# have p4 changes automatically include the -l flag - no point in truncating
+
 
 # enable this when working on p4nano.cs
 #$p4nanodebug = $true
@@ -38,6 +42,7 @@ add-type $p4nanoscript -lang csharpversion3 -compilerparam $p4nanocp
 <### Primary entry points ###>
 
 filter p4-run {
+
     $input = $_
 
     $dotnet = $false
