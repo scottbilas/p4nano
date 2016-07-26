@@ -161,8 +161,14 @@ filter p4n-run {
     # note that if the input is a Record object then this would be incompatible for simultaneous use with p4 args type input pipe.
 
     $a = ,'-znet' + $args
-    $_ | p4-run @a
+    $(ForEach ($ht in ($_ | p4-run @a)) { new-object PSObject -Property $ht }) # fixed by redpixel74. now can use Out-Gridview.
 }
 
 set-alias p4 p4-run
 set-alias p4n p4n-run
+
+filter P4N-Fix-TimeField ($fieldname = "Time")
+{
+	# Filter for converting p4 time field to datetime. Usage: P4N changes //depotpath/... | P4N-Fix-TimeField Time | Out-GridView
+    $_ | Select-Object -ExcludeProperty $fieldname -Property *, @{Name="$fieldname"; Expression={ (Get-Date -Date "1970-01-01 00:00:00Z").AddSeconds($_.$fieldname) } }
+}
